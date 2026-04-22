@@ -205,3 +205,24 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Cookiecutter Data Science
+data/
+*.csv
+!data/external/
+!data/external/.gitkeep
+!data/interim/
+!data/interim/.gitkeep
+!data/processed/
+!data/processed/.gitkeep
+!data/raw/
+!data/raw/.gitkeep
+models/*
+!models/.gitkeep
+references/
+reports/
+!reports/figures/
+!reports/figures/.gitkeep
+
+# DVC (if used later)
+.dvc/config.local
