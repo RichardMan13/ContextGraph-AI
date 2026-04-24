@@ -1,0 +1,210 @@
+---
+description: This guide provides actionable best practices for developing with Apache AGE, focusing on code organization, performance optimization, and common pitfalls.
+globs: **/*
+---
+# apache-age Best Practices
+
+This document serves as a definitive guide for developers working with Apache AGE. It encompasses best practices for code organization, performance considerations, data modeling, and more, ensuring efficient and maintainable graph database applications.
+
+## Code Organization and Structure
+
+### Use a Modular Approach
+Organize your code into modules based on functionality. This enhances readability and maintainability.
+
+❌ BAD
+```sql
+-- All code in one file
+CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(100));
+CREATE TABLE posts (id SERIAL PRIMARY KEY, content TEXT);
+```
+
+✅ GOOD
+```sql
+-- Separate files for each module
+-- users.sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(100));
+
+-- posts.sql
+CREATE TABLE posts (id SERIAL PRIMARY KEY, content TEXT);
+```
+
+### Consistent Naming Conventions
+Use consistent naming conventions for tables, columns, and graphs. This aids in understanding and reduces confusion.
+
+❌ BAD
+```sql
+CREATE TABLE user_data (id SERIAL PRIMARY KEY, userName VARCHAR(100));
+```
+
+✅ GOOD
+```sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(100));
+```
+
+## Common Patterns and Anti-patterns
+
+### Use `create_graph()` for Graph Creation
+Always use the `create_graph()` function to establish your graph environment. This ensures proper setup and avoids manual errors.
+
+❌ BAD
+```sql
+-- Manually creating a graph without AGE functions
+CREATE TABLE my_graph (id SERIAL PRIMARY KEY);
+```
+
+✅ GOOD
+```sql
+-- Correctly using create_graph()
+SELECT create_graph('my_graph');
+```
+
+### Avoid Implicit Joins
+Explicitly define your joins in queries. This improves readability and performance.
+
+❌ BAD
+```sql
+SELECT * FROM users, posts WHERE users.id = posts.user_id;
+```
+
+✅ GOOD
+```sql
+SELECT * FROM users
+JOIN posts ON users.id = posts.user_id;
+```
+
+## Performance Considerations
+
+### Optimize with Indexing
+Create indexes on frequently queried columns to enhance performance. Use the `EXPLAIN` command to analyze query plans.
+
+❌ BAD
+```sql
+-- No indexing
+SELECT * FROM users WHERE username = 'john_doe';
+```
+
+✅ GOOD
+```sql
+-- Creating an index
+CREATE INDEX idx_username ON users(username);
+```
+
+### Use Batch Inserts
+When loading large datasets, use batch inserts to minimize overhead.
+
+❌ BAD
+```sql
+-- Inserting one row at a time
+INSERT INTO users (username) VALUES ('user1');
+INSERT INTO users (username) VALUES ('user2');
+```
+
+✅ GOOD
+```sql
+-- Batch insert
+INSERT INTO users (username) VALUES ('user1'), ('user2');
+```
+
+## Common Pitfalls and Gotchas
+
+### Avoid Circular References
+Design your graph to avoid circular references, which can lead to infinite loops during traversals.
+
+❌ BAD
+```sql
+-- Circular reference in relationships
+MATCH (a:User)-[:FRIENDS_WITH]->(b:User)-[:FRIENDS_WITH]->(a)
+RETURN a, b;
+```
+
+✅ GOOD
+```sql
+-- Properly structured relationships
+MATCH (a:User)-[:FRIENDS_WITH]->(b:User)
+WHERE a.id <> b.id
+RETURN a, b;
+```
+
+### Handle Null Values
+Always account for potential null values in your queries to prevent unexpected results.
+
+❌ BAD
+```sql
+SELECT * FROM users WHERE username = NULL;
+```
+
+✅ GOOD
+```sql
+SELECT * FROM users WHERE username IS NULL;
+```
+
+## Security Best Practices
+
+### Sanitize User Input
+Always sanitize user input to prevent SQL injection attacks. Use parameterized queries wherever possible.
+
+❌ BAD
+```sql
+-- Directly using user input
+EXECUTE 'SELECT * FROM users WHERE username = ''' || user_input || '''';
+```
+
+✅ GOOD
+```sql
+-- Using parameterized queries
+PREPARE stmt AS SELECT * FROM users WHERE username = $1;
+EXECUTE stmt(user_input);
+```
+
+## Query Optimization
+
+### Use `EXPLAIN` for Performance Tuning
+Regularly use the `EXPLAIN` command to analyze and optimize your queries.
+
+```sql
+EXPLAIN SELECT * FROM users WHERE username = 'john_doe';
+```
+
+### Limit Result Sets
+Always limit your result sets to avoid excessive data retrieval.
+
+❌ BAD
+```sql
+SELECT * FROM users;
+```
+
+✅ GOOD
+```sql
+SELECT * FROM users LIMIT 100;
+```
+
+## Data Modeling
+
+### Use Appropriate Data Types
+Choose the most efficient data types for your columns to save space and improve performance.
+
+❌ BAD
+```sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, age INT);
+```
+
+✅ GOOD
+```sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, age SMALLINT);
+```
+
+### Normalize Your Data
+Normalize your data to reduce redundancy and improve data integrity.
+
+❌ BAD
+```sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(100), post_content TEXT);
+```
+
+✅ GOOD
+```sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(100));
+CREATE TABLE posts (id SERIAL PRIMARY KEY, user_id INT REFERENCES users(id), content TEXT);
+```
+
+By adhering to these best practices, you will enhance the quality, performance, and security of your applications built with Apache AGE.

@@ -226,3 +226,31 @@ reports/
 
 # DVC (if used later)
 .dvc/config.local
+
+# MLflow
+mlruns/
+mlruns.db
+artifacts/
+
+# Docker volumes & Database local data
+pgdata/
+age_data/
+
+# AI/ML Specific
+.cache/
+huggingface/
+.ragas/
+
+# Local configuration
+.venv/
+*.log
+
+# IDEs and Editors
+.vscode/
+.idea/
+.cursor/
+.history/
+
+# System files
+.DS_Store
+Thumbs.db

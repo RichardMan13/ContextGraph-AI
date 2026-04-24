@@ -1,0 +1,179 @@
+---
+description: This guide provides actionable best practices for developing user interfaces with Gradio, focusing on code organization, performance, and accessibility.
+globs: **/*.py
+---
+# gradio Best Practices
+
+Gradio is a powerful library for building machine learning interfaces. This guide outlines best practices to ensure your applications are efficient, maintainable, and user-friendly.
+
+## Code Organization and Structure
+
+### Use the Interface Class for Simple Applications
+For straightforward applications, leverage the `Interface` class to minimize boilerplate code.
+
+❌ BAD:
+```python
+import gradio as gr
+
+def predict(input):
+    return "Prediction: " + input
+
+app = gr.Interface(fn=predict, inputs="text", outputs="text")
+app.launch()
+```
+
+✅ GOOD:
+```python
+import gradio as gr
+
+def predict(input: str) -> str:
+    return "Prediction: " + input
+
+app = gr.Interface(fn=predict, inputs=gr.inputs.Textbox(label="Input"), outputs=gr.outputs.Textbox(label="Output"))
+app.launch()
+```
+**Why:** Using labeled inputs and outputs improves clarity and accessibility.
+
+### Modularize Your Code
+Break your code into reusable functions and classes to enhance maintainability.
+
+❌ BAD:
+```python
+def main():
+    # All code in one function
+    app = gr.Interface(fn=predict, inputs="text", outputs="text")
+    app.launch()
+```
+
+✅ GOOD:
+```python
+def create_interface():
+    return gr.Interface(fn=predict, inputs="text", outputs="text")
+
+if __name__ == "__main__":
+    app = create_interface()
+    app.launch()
+```
+**Why:** Modular code is easier to test and maintain.
+
+## Common Patterns and Anti-patterns
+
+### Use Blocks for Complex Interfaces
+For applications requiring dynamic layouts, use `Blocks` instead of nesting multiple `Interface` calls.
+
+❌ BAD:
+```python
+import gradio as gr
+
+def process(input):
+    return f"Processed: {input}"
+
+app1 = gr.Interface(fn=process, inputs="text", outputs="text")
+app2 = gr.Interface(fn=process, inputs="text", outputs="text")
+```
+
+✅ GOOD:
+```python
+import gradio as gr
+
+with gr.Blocks() as app:
+    with gr.Row():
+        input_box = gr.Textbox(label="Input")
+        output_box = gr.Textbox(label="Output")
+    btn = gr.Button("Process")
+    btn.click(fn=process, inputs=input_box, outputs=output_box)
+
+app.launch()
+```
+**Why:** Blocks allow for more complex layouts and interactivity.
+
+## Performance Considerations
+
+### Enable Queuing for Heavy Models
+When working with heavy models, use the `queue` parameter to handle multiple requests efficiently.
+
+❌ BAD:
+```python
+app = gr.Interface(fn=heavy_model, inputs="text", outputs="text")
+```
+
+✅ GOOD:
+```python
+app = gr.Interface(fn=heavy_model, inputs="text", outputs="text", queue=True)
+```
+**Why:** Queuing prevents server overload and improves user experience.
+
+## Common Pitfalls and Gotchas
+
+### Avoid Blocking Calls
+Do not use blocking calls in your functions; instead, use asynchronous programming.
+
+❌ BAD:
+```python
+import time
+
+def slow_function(input):
+    time.sleep(5)  # Blocking call
+    return f"Processed: {input}"
+```
+
+✅ GOOD:
+```python
+import asyncio
+
+async def slow_function(input):
+    await asyncio.sleep(5)  # Non-blocking call
+    return f"Processed: {input}"
+```
+**Why:** Non-blocking calls improve responsiveness in your application.
+
+## Component Architecture
+
+### Use Custom Components for Reusability
+Create custom components when you need specific functionality not covered by built-in components.
+
+```python
+class CustomTextbox(gr.Textbox):
+    def __init__(self, label):
+        super().__init__(label=label, placeholder="Type here...")
+
+def create_interface():
+    return gr.Interface(fn=predict, inputs=CustomTextbox("Input"), outputs="text")
+```
+**Why:** Custom components encapsulate behavior and styling, enhancing reusability.
+
+## Accessibility
+
+### Ensure All Components Are Accessible
+Always provide labels and tooltips for inputs and outputs to improve accessibility.
+
+✅ GOOD:
+```python
+input_box = gr.Textbox(label="Input", tooltip="Enter your input here.")
+output_box = gr.Textbox(label="Output", tooltip="This shows the result.")
+```
+**Why:** Accessibility is crucial for inclusivity in your applications.
+
+## Theming
+
+### Use Custom CSS for Branding
+Apply custom CSS to align the UI with your branding.
+
+```python
+app = gr.Interface(fn=predict, inputs="text", outputs="text", css=".output { color: blue; }")
+```
+**Why:** Custom theming enhances user experience and brand recognition.
+
+## Type Hints
+
+### Always Use Type Hints
+Incorporate type hints for better readability and error checking.
+
+✅ GOOD:
+```python
+def predict(input: str) -> str:
+    return "Prediction: " + input
+```
+**Why:** Type hints clarify expected input and output types, aiding in debugging.
+
+By following these best practices, you will create robust, efficient, and user-friendly machine learning applications with Gradio.

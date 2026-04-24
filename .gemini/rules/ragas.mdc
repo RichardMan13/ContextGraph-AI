@@ -1,0 +1,176 @@
+---
+description: This guide provides actionable best practices for using the ragas library in RAG systems, focusing on code organization, testing, and performance.
+globs: **/*.py
+---
+# ragas Best Practices
+
+This document outlines the best practices for working with the `ragas` library in Python, specifically tailored for Retrieval-Augmented Generation (RAG) systems. Following these guidelines will help ensure your code is reliable, maintainable, and efficient.
+
+## Code Organization and Structure
+
+### Use a Modular Approach
+Organize your code into modules based on functionality. This makes it easier to manage, test, and maintain.
+
+❌ BAD:
+```python
+# all functions in one file
+def retrieve_documents(query):
+    pass
+
+def process_documents(docs):
+    pass
+
+def generate_response(docs):
+    pass
+```
+
+✅ GOOD:
+```python
+# directory structure
+# /ragas_pipeline
+# ├── __init__.py
+# ├── retrieval.py
+# ├── processing.py
+# └── generation.py
+
+# retrieval.py
+def retrieve_documents(query):
+    pass
+
+# processing.py
+def process_documents(docs):
+    pass
+
+# generation.py
+def generate_response(docs):
+    pass
+```
+
+## Common Patterns and Anti-patterns
+
+### Favor Functional Programming
+Use pure functions where possible to improve testability and predictability.
+
+❌ BAD:
+```python
+# side effects in functions
+def update_model(model, data):
+    model.update(data)
+    return model
+```
+
+✅ GOOD:
+```python
+# pure function
+def update_model(model, data):
+    new_model = model.copy()
+    new_model.update(data)
+    return new_model
+```
+
+## Performance Considerations
+
+### Optimize Document Retrieval
+Use efficient data structures for document storage and retrieval to minimize latency.
+
+❌ BAD:
+```python
+# using a list for document storage
+documents = []
+
+def retrieve_documents(query):
+    return [doc for doc in documents if query in doc]
+```
+
+✅ GOOD:
+```python
+# using a dictionary for faster retrieval
+documents = {doc_id: doc_content for doc_id, doc_content in enumerate(["doc1", "doc2", "doc3"])}
+
+def retrieve_documents(query):
+    return {doc_id: content for doc_id, content in documents.items() if query in content}
+```
+
+## Common Pitfalls and Gotchas
+
+### Avoid Hardcoding Values
+Use configuration files or environment variables for settings to enhance flexibility.
+
+❌ BAD:
+```python
+# hardcoded values
+API_URL = "https://api.example.com"
+```
+
+✅ GOOD:
+```python
+import os
+
+# use environment variable
+API_URL = os.getenv("API_URL", "https://api.example.com")
+```
+
+## Type Hints
+
+### Always Use Type Hints
+Type hints improve code readability and help with static analysis.
+
+❌ BAD:
+```python
+def retrieve_documents(query):
+    # no type hints
+    pass
+```
+
+✅ GOOD:
+```python
+from typing import List
+
+def retrieve_documents(query: str) -> List[str]:
+    pass
+```
+
+## Virtual Environments
+
+### Use Virtual Environments for Dependency Management
+Always use a virtual environment to manage dependencies and avoid conflicts.
+
+❌ BAD:
+```bash
+# installing packages globally
+pip install ragas
+```
+
+✅ GOOD:
+```bash
+# creating and activating a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+pip install ragas
+```
+
+## Packaging
+
+### Structure Your Package Correctly
+Ensure your package is structured correctly for distribution.
+
+❌ BAD:
+```bash
+# incorrect structure
+# /my_package
+# ├── my_module.py
+# └── setup.py
+```
+
+✅ GOOD:
+```bash
+# correct structure
+# /my_package
+# ├── my_package
+# │   └── __init__.py
+# └── setup.py
+```
+
+## Conclusion
+
+By adhering to these best practices, you will enhance the reliability and maintainability of your RAG systems using the `ragas` library. Always remember to test thoroughly, structure your code cleanly, and utilize modern Python features to their fullest potential.

@@ -1,0 +1,32 @@
+# Core LLM & Orchestration
+langchain>=0.1.0
+langchain-community
+langchain-core
+langchain-openai
+langchain-google-genai
+ragas
+mlflow
+
+# Database & Vectors
+psycopg2-binary
+chromadb
+sentence-transformers
+
+# Data Processing
+pandas
+numpy
+
+# Web Interface & API
+gradio
+fastapi
+uvicorn
+
+# Utilities
+cookiecutter
+python-dotenv
+pydantic
+openai
+click
+Sphinx
+coverage
+flake8
