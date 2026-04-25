@@ -1,0 +1,86 @@
+# =============================================================================
+# docker-compose.yml — CineGraph-AI
+# =============================================================================
+# Services:
+#   db      — PostgreSQL 16 with Apache AGE (graph) + pgvector (ANN search)
+#   mlflow  — MLflow Tracking Server (SQLite backend, local artifact store)
+#
+# Usage:
+#   docker-compose up -d          # start all services
+#   docker-compose down -v        # stop and remove volumes
+#   docker-compose logs -f db     # tail db logs
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # db: PostgreSQL + Apache AGE + pgvector (single container for the full
+  #     data layer — graph, vectors, and relational metadata).
+  # ---------------------------------------------------------------------------
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    container_name: cinegraph_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-cinegraph_db}
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # persistent graph + vector data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-cinegraph_db}"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    networks:
+      - cinegraph_net
+
+  # ---------------------------------------------------------------------------
+  # mlflow: Tracking server for experiment versioning.
+  #   - Backend store : SQLite file at /mlflow/mlflow.db (inside named volume)
+  #   - Artifact store: /mlflow/artifacts (inside named volume)
+  #   - UI accessible at http://localhost:5000
+  # ---------------------------------------------------------------------------
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    container_name: cinegraph_mlflow
+    restart: unless-stopped
+    command: >
+      mlflow server
+        --backend-store-uri sqlite:////mlflow/mlflow.db
+        --default-artifact-root /mlflow/artifacts
+        --host 0.0.0.0
+        --port 5000
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - mlflow_data:/mlflow               # persists experiments + artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 20s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    networks:
+      - cinegraph_net
+
+# =============================================================================
+# Named volumes — data persists across container restarts
+# =============================================================================
+volumes:
+  pgdata:
+    driver: local
+  mlflow_data:
+    driver: local
+
+# =============================================================================
+# Network — isolated bridge network for service-to-service communication
+# =============================================================================
+networks:
+  cinegraph_net:
+    driver: bridge

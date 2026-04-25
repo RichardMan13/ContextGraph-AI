@@ -1,0 +1,44 @@
+# =============================================================================
+# Dockerfile.db
+# =============================================================================
+# Custom PostgreSQL image with both Apache AGE (graph) and pgvector (ANN
+# vector search) extensions compiled from source.
+#
+# Base: apache/age:PG16 — Official Apache AGE image on PostgreSQL 16.
+# Added: pgvector built from source via git + make.
+# =============================================================================
+
+# ── Stage 1: Build pgvector ──────────────────────────────────────────────────
+FROM apache/age:PG16 AS pgvector-builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    postgresql-server-dev-16 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone and compile pgvector
+ARG PGVECTOR_VERSION=v0.8.0
+RUN git clone --branch ${PGVECTOR_VERSION} --depth 1 \
+    https://github.com/pgvector/pgvector.git /tmp/pgvector \
+    && cd /tmp/pgvector \
+    && make \
+    && make install
+
+# ── Stage 2: Runtime image ───────────────────────────────────────────────────
+FROM apache/age:PG16
+
+# Copy compiled pgvector artifacts from builder stage
+COPY --from=pgvector-builder \
+    /usr/share/postgresql/16/extension/vector* \
+    /usr/share/postgresql/16/extension/
+COPY --from=pgvector-builder \
+    /usr/lib/postgresql/16/lib/vector.so \
+    /usr/lib/postgresql/16/lib/
+
+# Initialisation script: load AGE + pgvector and create graph on first start
+COPY docker/init-db.sql /docker-entrypoint-initdb.d/01-init.sql
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
+    CMD pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" || exit 1

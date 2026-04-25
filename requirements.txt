@@ -8,9 +8,9 @@ ragas
 mlflow
 
 # Database & Vectors
-psycopg2-binary
-chromadb
-sentence-transformers
+psycopg2-binary      # PostgreSQL driver
+pgvector             # pgvector Python client
+langchain-postgres   # LangChain PGVector store integration
 
 # Data Processing
 pandas

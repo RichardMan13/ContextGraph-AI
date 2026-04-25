@@ -207,6 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 # Cookiecutter Data Science
+# All data files gitignored by default — run enrich_plots.py to regenerate.
 data/
 *.csv
 !data/external/
@@ -217,9 +218,11 @@ data/
 !data/processed/.gitkeep
 !data/raw/
 !data/raw/.gitkeep
+!data/raw/movies.csv        # Source watchlist — ships with the repo, never overwritten
 models/*
 !models/.gitkeep
 references/
+!references/golden_dataset.json   # Q&A pairs for RAGas evaluation
 reports/
 !reports/figures/
 !reports/figures/.gitkeep
