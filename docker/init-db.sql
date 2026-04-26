@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS age;
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Make AGE functions available in the current search path
-LOAD '$libdir/plugins/age';
+LOAD 'age';
 SET search_path = ag_catalog, "$user", public;
 
 -- 2. Create the Apache AGE graph (idempotent via DO block)
@@ -33,7 +33,7 @@ $$;
 --    plot    : source text used to generate the embedding
 --    embedding: 1536-dim vector from OpenAI text-embedding-3-small
 --    metadata: JSONB bag for title, year, rating (display fields)
-CREATE TABLE IF NOT EXISTS movie_embeddings (
+CREATE TABLE IF NOT EXISTS public.movie_embeddings (
     id        SERIAL PRIMARY KEY,
     const     TEXT        NOT NULL UNIQUE,  -- IMDb ID, e.g. tt0268978
     plot      TEXT        NOT NULL,
@@ -45,13 +45,13 @@ CREATE TABLE IF NOT EXISTS movie_embeddings (
 --    Parameters are conservative for a ~800-row dataset.
 --    Scale m / ef_construction upward if dataset grows beyond 100k rows.
 CREATE INDEX IF NOT EXISTS movie_embeddings_hnsw_idx
-    ON movie_embeddings
+    ON public.movie_embeddings
     USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 
 -- 5. Stored procedure: semantic search with optional IMDb ID pre-filter
 --    Follows pgvector.mdc: "Keep database logic separate from application logic"
-CREATE OR REPLACE FUNCTION search_movie_embeddings(
+CREATE OR REPLACE FUNCTION public.search_movie_embeddings(
     query_embedding VECTOR(1536),
     candidate_ids   TEXT[]   DEFAULT NULL,  -- NULL = no graph pre-filter
     top_k           INT      DEFAULT 10

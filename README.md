@@ -290,8 +290,7 @@ python src/data/enrich_plots.py --dry-run
 
 ---
 
-
-
+### 🧹 Fase 2: Preparação e Limpeza de Dados — ✅ Concluída
 - [x] **Análise do Dataset**: `data/raw/movies.csv` inspecionado — 792 filmes, 18 colunas; `Description` 100% nula; `Directors` 96 nulos; `IMDb Rating` 6 nulos
 - [x] **Gap identificado**: Coluna `Description` vazia → enriquecimento via OMDb API com campo `Const` (IMDb ID)
 - [x] **Script de enriquecimento**: `src/data/enrich_plots.py` — rate-limited (0.15s/req), retries (3x), resumível, dry-run mode
@@ -300,30 +299,31 @@ python src/data/enrich_plots.py --dry-run
 
 ---
 
-### 🗄️ Fase 3: Ingestão no Knowledge Graph (PostgreSQL + Apache AGE) — 📋 Pendente
+### 🗄️ Fase 3: Ingestão no Knowledge Graph (PostgreSQL + Apache AGE) — ✅ Concluída
 
 - [x] **Schema AGE**: `movies_graph` criado via `docker/init-db.sql` (executado automaticamente no primeiro `docker-compose up`)
-- [ ] **Script de ingestão** (`src/data/ingest_graph.py`): Ler `movies_enriched.csv`, normalizar gêneros, inserir nós `Movie`, `Director`, `Genre`, `Year` e relacionamentos `DIRECTED_BY`, `IN_GENRE`, `RELEASED_IN` via Cypher no AGE
+- [x] **Script de ingestão** (`src/data/ingest_graph.py`): Lê `movies_enriched.csv`, filtra `Title Type == 'Filme'`, normaliza gêneros, insere nós `Movie`, `Director`, `Genre`, `Year` e relacionamentos via MERGE idempotente; batch commits a cada 50 filmes
+- [x] **Executar ingestão**: `make ingest` executado com sucesso — 675 filmes inseridos.
 
 ---
 
-### 🧠 Fase 4: Vetorização e Recuperação Semântica — 📋 Pendente
+### 🧠 Fase 4: Vetorização e Recuperação Semântica — ✅ Concluída
 
 - [x] **Tabela pgvector**: `movie_embeddings (VECTOR(1536))` + índice HNSW criados via `docker/init-db.sql`
-- [ ] **Script de embeddings** (`src/data/generate_embeddings.py`): Gerar vetores `text-embedding-3-small` (1536 dims) para o campo `Plot` e inserir em `movie_embeddings`
-- [ ] **`src/tools/vector_retriever.py`**: Wrapper `PGVector` (langchain-postgres) com busca filtrada por `candidate_ids`
+- [x] **Script de embeddings** (`src/data/generate_embeddings.py`): Lê plots formatados, gera embeds via `text-embedding-3-small`, salva no PG usando upsert.
+- [x] **Executar embeddings**: `make embed` executado (673 filmes codificados em 16s)
+- [x] **`src/tools/vector_retriever.py`**: Wrapper desenvolvido. Conecta via psycopg2 direto na procedure do banco, executa via `langchain_openai.OpenAIEmbeddings`, recebe listas de `candidate_ids` e empacota retorno em `Document` do LangChain.
 
 ---
 
-### 🔗 Fase 5: Integração LangChain (Cérebro do GraphRAG) — 🔄 Parcialmente Concluída
+### 🧩 Fase 5: Integração LangChain (LCEL) e LLM — ✅ Concluída
 
-- [x] **Prompt Cypher** (`src/prompts/cypher_prompt.py`): Schema estático + 8 regras de sintaxe AGE + 3 few-shot examples + sentinel `__NO_GRAPH_FILTER__` para queries puramente semânticas
-- [ ] **`src/models/llm.py`**: Singleton `ChatOpenAI(model="gpt-4o-mini")` + `OpenAIEmbeddings` + `set_llm_cache(InMemoryCache())`
-- [ ] **`src/prompts/answer_prompt.py`**: Prompt de geração de resposta final com contexto dos filmes recuperados
-- [ ] **`src/tools/graph_retriever.py`**: Executor psycopg2 para queries Apache AGE Cypher; detecta sentinel `__NO_GRAPH_FILTER__` e retorna `None`
-- [ ] **`src/chains/graph_chain.py`**: LCEL — `cypher_prompt | llm.with_structured_output(GraphQueryResult) | execute_cypher_on_age`
-- [ ] **`src/chains/vector_chain.py`**: LCEL — busca pgvector filtrada por `candidate_ids` (ou global se fallback)
-- [ ] **`src/chains/graphrag_chain.py`**: Orchestrator — Stage 1 → Stage 2 → RRF fusion → Answer chain (streamed)
+- [x] **`src/models/llm.py`**: Instanciar `ChatOpenAI(model='gpt-4o-mini')` e `InMemoryCache`
+- [x] **`src/prompts/cypher_prompt.py`**: Prompt _Few-Shot_ com schema estático para conversão NL → Cypher
+- [x] **`src/prompts/answer_prompt.py`**: Prompt de geração da resposta final (sintetiza a busca vetorizada)
+- [x] **`src/chains/graph_chain.py`**: Cadeia 1 (NL → GPT-4o-mini [Cypher] → AGE) // Retorna `candidate_ids`
+- [x] **`src/chains/vector_chain.py`**: Cadeia 2 (Recebe query + `candidate_ids` → busca no pgvector) // Retorna `Docs`
+- [x] **`src/chains/graphrag_chain.py`**: Cadeia híbrida completa orquestrando 1 e 2.
 
 ---
 

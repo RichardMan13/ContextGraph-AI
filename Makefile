@@ -38,6 +38,22 @@ enrich:
 enrich-dry:
 	$(PYTHON) src/data/enrich_plots.py --dry-run
 
+## Ingest movies_enriched.csv into Apache AGE knowledge graph
+ingest:
+	$(PYTHON) src/data/ingest_graph.py
+
+## Dry-run ingestion (validates setup without writing to the database)
+ingest-dry:
+	$(PYTHON) src/data/ingest_graph.py --dry-run
+
+## Generate OpenAI embeddings for movie plots and store in pgvector
+embed:
+	$(PYTHON) src/data/generate_embeddings.py
+
+## Dry-run embeddings (validates data logic without API hits)
+embed-dry:
+	$(PYTHON) src/data/generate_embeddings.py --dry-run
+
 ## Start FastAPI + Gradio server (http://localhost:7860)
 run:
 	$(UVICORN) src.app:app --host 0.0.0.0 --port 7860 --reload

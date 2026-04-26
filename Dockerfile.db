@@ -9,7 +9,7 @@
 # =============================================================================
 
 # ── Stage 1: Build pgvector ──────────────────────────────────────────────────
-FROM apache/age:PG16 AS pgvector-builder
+FROM apache/age:release_PG16_1.6.0 AS pgvector-builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -20,14 +20,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Clone and compile pgvector
 ARG PGVECTOR_VERSION=v0.8.0
-RUN git clone --branch ${PGVECTOR_VERSION} --depth 1 \
+RUN git -c http.sslVerify=false clone --branch ${PGVECTOR_VERSION} --depth 1 \
     https://github.com/pgvector/pgvector.git /tmp/pgvector \
     && cd /tmp/pgvector \
     && make \
     && make install
 
 # ── Stage 2: Runtime image ───────────────────────────────────────────────────
-FROM apache/age:PG16
+FROM apache/age:release_PG16_1.6.0
 
 # Copy compiled pgvector artifacts from builder stage
 COPY --from=pgvector-builder \

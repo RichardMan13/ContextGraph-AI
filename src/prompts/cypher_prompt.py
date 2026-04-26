@@ -40,7 +40,11 @@ APACHE AGE CYPHER SYNTAX RULES:
        $$) AS (<alias> agtype);
   2. Use exact label names (Movie, Director, Genre, Year) — case-sensitive.
   3. Use exact property names as listed above — case-sensitive.
-  4. String matching is case-sensitive. For genre names use Title Case (e.g. 'Sci-Fi', 'Drama').
+  4. String matching is case-sensitive. Genre names are in Portuguese as stored in the dataset:
+       ['Animação', 'Aventura', 'Ação', 'Biografia', 'Comédia', 'Documentário',
+        'Drama', 'Esportes', 'Família', 'Fantasia', 'Faroeste', 'Ficção científica',
+        'Guerra', 'História', 'Mistério', 'Musical', 'Policial', 'Romance',
+        'Suspense', 'Terror']
   5. To return multiple columns, list them all in the AS clause:
        $$) AS (const agtype, title agtype, imdb_rating agtype);
   6. Use LIMIT to cap results (default: 20).
@@ -58,8 +62,8 @@ _EXAMPLES = """
 User: Sci-fi movies directed by Christopher Nolan rated above 8.0
 Cypher:
 SELECT * FROM cypher('movies_graph', $$
-    MATCH (m:Movie)-[:DIRECTED_BY]->(d:Director {name: 'Christopher Nolan'})
-    MATCH (m)-[:IN_GENRE]->(g:Genre {name: 'Sci-Fi'})
+    MATCH (m:Movie)-[:DIRECTED_BY]->(d:Director {{name: 'Christopher Nolan'}})
+    MATCH (m)-[:IN_GENRE]->(g:Genre {{name: 'Ficção científica'}})
     WHERE m.imdb_rating >= 8.0
     RETURN m.const, m.title, m.imdb_rating
     ORDER BY m.imdb_rating DESC
@@ -70,7 +74,7 @@ $$) AS (const agtype, title agtype, imdb_rating agtype);
 User: Horror movies from the 1980s
 Cypher:
 SELECT * FROM cypher('movies_graph', $$
-    MATCH (m:Movie)-[:IN_GENRE]->(g:Genre {name: 'Horror'})
+    MATCH (m:Movie)-[:IN_GENRE]->(g:Genre {{name: 'Terror'}})
     MATCH (m)-[:RELEASED_IN]->(y:Year)
     WHERE y.value >= 1980 AND y.value <= 1989
     RETURN m.const, m.title, m.imdb_rating
