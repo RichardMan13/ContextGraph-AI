@@ -1,0 +1,59 @@
+---
+name: setup-pre-commit
+description: Set up pre-commit hooks for Python projects to ensure code formatting, linting, and quality checks run before every commit. Use when user wants to add pre-commit hooks, configure linting, or add commit-time formatting for Python.
+---
+
+# Setup Pre-Commit Hooks (Python)
+
+## What This Sets Up
+
+- **pre-commit** framework (The standard for Python projects)
+- **Ruff** (Replaces Flake8, Isort, and Black because it is extremely faster)
+- **Standard Hooks** to check for trailing whitespace, fix end-of-file issues, and check for large files or passwords.
+
+## Steps
+
+### 1. Install `pre-commit`
+Ensure that `pre-commit` is installed in the project's virtual environment:
+```bash
+pip install pre-commit
+```
+*(Remember to add it to `requirements.txt` if applicable).*
+
+### 2. Create `.pre-commit-config.yaml`
+The following file should be created at the root of the repository:
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: debug-statements
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff handles both Linting (finding errors) and formatting (code style)
+    rev: v0.4.0
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+```
+
+### 3. Install hooks in Git
+Run the command below to install the script in the `.git/hooks/` directory:
+```bash
+pre-commit install
+```
+
+### 4. Initial Test (Check all files)
+Optional, but highly recommended to run once to format the entire current repository:
+```bash
+pre-commit run --all-files
+```
+
+### 5. Commit
+Add the new file and make the initial setup commit: `Add pre-commit hooks for Python (Ruff)`

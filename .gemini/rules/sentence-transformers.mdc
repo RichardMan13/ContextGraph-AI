@@ -120,4 +120,3 @@ except Exception as e:
 ```python
 model = SentenceTransformer(MODEL_NAME)  # No error handling
 ```
-

@@ -99,7 +99,7 @@ Be mindful of memory usage when building indexes. Monitor your PostgreSQL instan
 Always sanitize input data to prevent SQL injection attacks, especially when dealing with JSONB metadata.
 
 ```sql
-INSERT INTO embeddings (vector, metadata) VALUES ($1, $2) 
+INSERT INTO embeddings (vector, metadata) VALUES ($1, $2)
 ON CONFLICT (id) DO UPDATE SET vector = EXCLUDED.vector, metadata = EXCLUDED.metadata;
 ```
 
@@ -156,4 +156,3 @@ CREATE TABLE users (
 
 ALTER TABLE embeddings ADD COLUMN user_id INT REFERENCES users(id);
 ```
-

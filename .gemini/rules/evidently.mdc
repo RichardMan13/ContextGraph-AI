@@ -119,4 +119,3 @@ drift_metric = ModelDriftMetric(reference_model, current_model)
 if drift_metric.is_drifted():
     alert_team()  # Trigger an alert
 ```
-

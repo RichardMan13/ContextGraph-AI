@@ -190,4 +190,3 @@ df['int_col'] = pd.Series([1, 2, pd.NA], dtype='Int64')
 # If you need float, explicitly convert or accept the float result
 df['float_col'] = df['int_col'].astype('Float64') + 0.5
 ```
-

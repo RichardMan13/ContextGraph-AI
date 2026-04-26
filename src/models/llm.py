@@ -3,6 +3,7 @@ src/models/llm.py
 ─────────────────
 Singleton provider for LangChain LLM instances configured for the GraphRAG pipeline.
 """
+
 import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -14,6 +15,7 @@ load_dotenv()
 # Enable fast, process-local caching to save tokens on repeated completions
 set_llm_cache(InMemoryCache())
 
+
 def get_llm(temperature: float = 0.0) -> ChatOpenAI:
     """
     Returns the default ChatOpenAI instance for the application.
@@ -21,5 +23,5 @@ def get_llm(temperature: float = 0.0) -> ChatOpenAI:
     return ChatOpenAI(
         model="gpt-4o-mini",
         temperature=temperature,
-        api_key=os.getenv("OPENAI_API_KEY")
+        api_key=os.getenv("OPENAI_API_KEY"),
     )

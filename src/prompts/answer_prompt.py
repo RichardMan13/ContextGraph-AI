@@ -21,7 +21,6 @@ Sua missão é responder à pergunta do usuário baseando-se estritamente nas re
 5. Seja direto, evite introduções robóticas. Responda com paixão pelo cinema!
 """
 
-ANSWER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", ANSWER_SYSTEM_PROMPT),
-    ("human", "{query}")
-])
+ANSWER_PROMPT = ChatPromptTemplate.from_messages(
+    [("system", ANSWER_SYSTEM_PROMPT), ("human", "{query}")]
+)

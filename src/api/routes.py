@@ -18,8 +18,10 @@ router = APIRouter()
 # Instantiate the singleton chain for performance
 graphrag_chain = get_graphrag_chain()
 
+
 class RecommendRequest(BaseModel):
     query: str
+
 
 class RecommendResponse(BaseModel):
     answer: str
@@ -27,7 +29,12 @@ class RecommendResponse(BaseModel):
     candidate_ids: Optional[List[str]] = None
     source_documents: Optional[List[Dict[str, Any]]] = None
 
-@router.post("/v1/recommend", response_model=RecommendResponse, summary="Query the GraphRAG Knowledge Base")
+
+@router.post(
+    "/v1/recommend",
+    response_model=RecommendResponse,
+    summary="Query the GraphRAG Knowledge Base",
+)
 async def recommend_endpoint(request: RecommendRequest):
     """
     Executes a semantic movie search using the Apache AGE + pgvector GraphRAG pipeline.
@@ -35,32 +42,33 @@ async def recommend_endpoint(request: RecommendRequest):
     """
     try:
         result = graphrag_chain.invoke({"query": request.query})
-        
+
         docs = []
         for doc in result.get("source_documents", []):
-            docs.append({
-                "page_content": doc.page_content,
-                "metadata": doc.metadata
-            })
-            
+            docs.append({"page_content": doc.page_content, "metadata": doc.metadata})
+
         return RecommendResponse(
             answer=result["answer"],
             cypher_query=result.get("cypher_query"),
             candidate_ids=result.get("candidate_ids"),
-            source_documents=docs
+            source_documents=docs,
         )
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/v1/ingest", summary="Trigger the ETL ingestion processes")
 async def ingest_endpoint(background_tasks: BackgroundTasks):
     """
     Triggers the Apache AGE and pgvector ingestion scripts asynchronously.
     """
+
     def run_ingestion():
         import logging
+
         logging.info("Starting API-triggered ingestion...")
         subprocess.run([sys.executable, "src/data/ingest_graph.py"], check=False)
         subprocess.run([sys.executable, "src/data/generate_embeddings.py"], check=False)
@@ -68,6 +76,7 @@ async def ingest_endpoint(background_tasks: BackgroundTasks):
 
     background_tasks.add_task(run_ingestion)
     return {"message": "Ingestion process started in the background."}
+
 
 @router.get("/v1/health", summary="API Health Check")
 async def health_endpoint():

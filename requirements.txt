@@ -29,4 +29,6 @@ openai
 click
 Sphinx
 coverage
-flake8
+# Quality & Development
+pre-commit
+ruff

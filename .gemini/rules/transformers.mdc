@@ -239,4 +239,3 @@ with mlflow.start_run():
 logged_model = mlflow.pyfunc.load_model("runs:/<run_id>/text_generator_pipeline")
 result = logged_model.predict(["Hello, my name is"])
 ```
-

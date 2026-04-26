@@ -15,7 +15,7 @@ from src.ui.blocks import create_ui
 app = FastAPI(
     title="CineGraph-AI API",
     description="Knowledge Graph RAG for Movie Recommendations using Apache AGE and pgvector",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Enable CORS for frontend integrations if necessary
@@ -38,4 +38,5 @@ app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("src.app:app", host="0.0.0.0", port=7860, reload=True)

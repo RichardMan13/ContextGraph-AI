@@ -343,4 +343,3 @@ Always add descriptive comments to tables and columns using `COMMENT ON`. This i
 comment on table users is 'Stores information about application users.';
 comment on column users.user_name is 'Full name of the user.';
 ```
-

@@ -88,7 +88,7 @@ Baseado nas colunas reais do dataset (`data/raw/movies.csv` — exportação pes
 
 ## 🎭 Cenário de Teste: "A Recomendação Perfeita"
 
-**Pergunta do Usuário:** 
+**Pergunta do Usuário:**
 *"Me recomende filmes de ficção científica bem avaliados dirigidos pelo Christopher Nolan que falem sobre manipulação do tempo."*
 
 | Etapa | Processamento GraphRAG |
@@ -343,11 +343,11 @@ python src/data/enrich_plots.py --dry-run
 
 ---
 
-### 🧪 Fase 7: Testes e Avaliação — 📋 Pendente
+### 🧪 Fase 7: Testes e Avaliação — ✅ Concluída
 
-- [ ] **Cenários de integração**: Validar conexões grafo + filtros dinâmicos nas 3 query patterns (diretor+gênero+rating, faixa de ano, semântico puro)
-- [ ] **`references/golden_dataset.json`**: ~15 pares Q&A extraídos do watchlist real para benchmark reproduzível
-- [ ] **`src/models/evaluate.py`**: Script one-shot — executa RAGas (Faithfulness, Answer Relevance, Context Precision) e loga via `mlflow.log_metrics()`
+- [x] **Cenários de integração**: Validar conexões grafo + filtros dinâmicos nas 3 query patterns (diretor+gênero+rating, faixa de ano, semântico puro)
+- [x] **`references/golden_dataset.json`**: ~10 pares Q&A extraídos para benchmark reproduzível
+- [x] **`src/models/evaluate.py`**: Script one-shot — executa RAGas (Faithfulness, Answer Relevance, Context Precision) e loga via `mlflow.log_metrics()`
 
 ---
 
