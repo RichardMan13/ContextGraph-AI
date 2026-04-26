@@ -327,19 +327,19 @@ python src/data/enrich_plots.py --dry-run
 
 ---
 
-### 🔌 Fase 5.5: FastAPI + Gradio — 📋 Pendente
+### 🔌 Fase 5.5: FastAPI + Gradio — ✅ Concluída
 
-- [ ] **`src/api/router.py`**: Endpoints `POST /api/v1/recommend`, `POST /api/v1/ingest`, `GET /api/v1/health`
-- [ ] **`src/app.py`**: `gr.mount_gradio_app(fastapi_app, blocks, path="/")` — único processo uvicorn na porta 7860
+- [x] **`src/api/routes.py`**: Endpoints `POST /api/v1/recommend`, `POST /api/v1/ingest`, e `GET /api/v1/health` fielmente implementados.
+- [x] **`src/app.py`**: `gr.mount_gradio_app(app, demo, path="/")` — único processo uvicorn rodando na porta 7860.
 
 ---
 
-### 🖥️ Fase 6: Interface Gradio (`gr.Blocks`) — 📋 Pendente
+### 🖥️ Fase 6: Interface Gradio (`gr.Blocks`) — ✅ Concluída
 
-- [ ] **`src/ui/blocks.py`** — `create_ui()` com layout split:
+- [x] **`src/ui/blocks.py`** — `create_ui()` com layout split:
   - Coluna esquerda: `gr.Chatbot` com streaming via `async def` + `yield`
   - Coluna direita: `gr.HTML` com cards por filme (título, rating, gêneros, diretor, trecho do plot)
-- [ ] **Queuing**: `app.queue()` antes de `app.launch()` para múltiplas requisições concorrentes
+- [x] **Queuing**: `app.queue()` antes de `app.launch()` para múltiplas requisições concorrentes
 
 ---
 
