@@ -3,7 +3,6 @@ langchain>=0.1.0
 langchain-community
 langchain-core
 langchain-openai
-langchain-google-genai
 ragas
 mlflow
 
@@ -29,6 +28,14 @@ openai
 click
 Sphinx
 coverage
+# Visualization
+plotly
+pyvis
+scikit-learn
+networkx
+seaborn
+matplotlib
+
 # Quality & Development
 pre-commit
 ruff

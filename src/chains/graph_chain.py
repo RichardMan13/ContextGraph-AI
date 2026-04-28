@@ -22,13 +22,17 @@ class GraphQueryResult(BaseModel):
 
 def _execute_cypher(result: GraphQueryResult) -> Dict[str, Any]:
     """
-    Executes the structured query and returns the candidate IDs.
+    Executes the structured query and returns the candidate IDs and graph context.
     Returns a dict with state to pass along to Stage 2.
     """
     retriever = GraphRetriever()
-    candidate_ids = retriever.retrieve_candidate_ids(result.cypher_query)
+    res = retriever.retrieve_candidate_ids(result.cypher_query)
 
-    return {"cypher_query": result.cypher_query, "candidate_ids": candidate_ids}
+    return {
+        "cypher_query": result.cypher_query,
+        "candidate_ids": res["ids"],
+        "graph_context": res["graph_context"],
+    }
 
 
 def get_graph_chain():
@@ -51,7 +55,7 @@ if __name__ == "__main__":
     print(
         chain.invoke(
             {
-                "query": "Quero um filme de Ficção científica de Christopher Nolan, com nota acima de 8.0"
+                "query": "I want a Science Fiction movie by Christopher Nolan, with a rating above 8.0"
             }
         )
     )

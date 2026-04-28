@@ -59,31 +59,31 @@ _EXAMPLES = """
 === FEW-SHOT EXAMPLES ===
 
 --- Example 1: Filter by director + genre + minimum rating ---
-User: Sci-fi movies directed by Christopher Nolan rated above 8.0
+User: Sci-fi movies I've watched directed by Christopher Nolan rated above 8.0
 Cypher:
 SELECT * FROM cypher('movies_graph', $$
     MATCH (m:Movie)-[:DIRECTED_BY]->(d:Director {{name: 'Christopher Nolan'}})
     MATCH (m)-[:IN_GENRE]->(g:Genre {{name: 'Ficção científica'}})
     WHERE m.imdb_rating >= 8.0
-    RETURN m.const, m.title, m.imdb_rating
+    RETURN m.const, m.title, d.name, g.name
     ORDER BY m.imdb_rating DESC
     LIMIT 20
-$$) AS (const agtype, title agtype, imdb_rating agtype);
+$$) AS (const agtype, title agtype, director agtype, genre agtype);
 
 --- Example 2: Filter by year range + genre ---
-User: Horror movies from the 1980s
+User: Horror movies in my list from the 1980s
 Cypher:
 SELECT * FROM cypher('movies_graph', $$
     MATCH (m:Movie)-[:IN_GENRE]->(g:Genre {{name: 'Terror'}})
     MATCH (m)-[:RELEASED_IN]->(y:Year)
     WHERE y.value >= 1980 AND y.value <= 1989
-    RETURN m.const, m.title, m.imdb_rating
-    ORDER BY m.imdb_rating DESC
+    RETURN m.const, m.title, y.value, g.name
+    ORDER BY y.value DESC
     LIMIT 20
-$$) AS (const agtype, title agtype, imdb_rating agtype);
+$$) AS (const agtype, title agtype, year agtype, genre agtype);
 
 --- Example 3: Well-rated movies (no genre/director filter — broad semantic query) ---
-User: Best movies of all time
+User: My best rated movies of all time
 Cypher:
 SELECT * FROM cypher('movies_graph', $$
     MATCH (m:Movie)
@@ -92,6 +92,47 @@ SELECT * FROM cypher('movies_graph', $$
     ORDER BY m.imdb_rating DESC
     LIMIT 20
 $$) AS (const agtype, title agtype, imdb_rating agtype);
+
+--- Example 4: Analytical query (Top directors) ---
+User: Who are the 5 directors I've watched the most?
+Cypher:
+SELECT * FROM cypher('movies_graph', $$
+    MATCH (m:Movie)-[:DIRECTED_BY]->(d:Director)
+    RETURN d.name, count(m)
+    ORDER BY count(m) DESC
+    LIMIT 5
+$$) AS (director_name agtype, movie_count agtype);
+
+--- Example 5: Decade aggregation ---
+User: Which decades are most present in my list?
+Cypher:
+SELECT * FROM cypher('movies_graph', $$
+    MATCH (m:Movie)-[:RELEASED_IN]->(y:Year)
+    RETURN (y.value / 10) * 10, count(m)
+    ORDER BY count(m) DESC
+$$) AS (decade agtype, movie_count agtype);
+
+--- Example 6: Filtering by Year range (pre/post) ---
+User: Which movies have I watched from before 1980?
+Cypher:
+SELECT * FROM cypher('movies_graph', $$
+    MATCH (m:Movie)-[:RELEASED_IN]->(y:Year)
+    WHERE y.value < 1980
+    RETURN m.const, m.title, y.value
+    ORDER BY y.value ASC
+$$) AS (const agtype, title agtype, year agtype);
+
+--- Example 7: Filtering by aggregate count (Avoid HAVING and Aliases in ORDER BY) ---
+User: Which years in the 2010s have more than 30 movies?
+Cypher:
+SELECT * FROM cypher('movies_graph', $$
+    MATCH (m:Movie)-[:RELEASED_IN]->(y:Year)
+    WHERE y.value >= 2010 AND y.value <= 2019
+    WITH y, count(m) AS cnt
+    WHERE cnt > 30
+    RETURN y.value, cnt
+    ORDER BY 2 DESC
+$$) AS (year agtype, movie_count agtype);
 """
 
 # ── Fallback instruction ───────────────────────────────────────────────────────
@@ -108,7 +149,7 @@ This tells the orchestrator to skip the graph step and run pure vector search.
 # ── Full system prompt ─────────────────────────────────────────────────────────
 _SYSTEM_PROMPT = f"""You are an expert Apache AGE Cypher query generator for a movie recommendation system.
 
-Your ONLY job is to translate the user's natural language query into a valid Apache AGE Cypher query
+Your ONLY job is to translate the user's natural language query about their movie history into a valid Apache AGE Cypher query
 that returns a list of IMDb IDs (const) matching the user's filters.
 
 {_SCHEMA}
@@ -120,7 +161,16 @@ that returns a list of IMDb IDs (const) matching the user's filters.
 IMPORTANT RULES:
 - Return ONLY the raw SQL/Cypher block. No explanation, no markdown fences.
 - Never reference properties that are not listed in the schema.
-- Always include m.const in the RETURN clause (it is the JOIN key for the vector search step).
+- For movie-seeking/filtering queries (by year, director, genre, etc.): Always return m.const AND m.title. If the query involves a specific property (like year or genre), return that property too (e.g., y.value or g.name) to provide exact context.
+- For analytical/counting queries: Return the requested statistics (e.g. director names and counts).
+- NEVER use the "HAVING" clause. To filter by count, use "WITH ... AS cnt WHERE cnt > X".
+- Scope Rule: When using WITH, remember that only variables listed in the WITH clause remain in scope. If you need a variable later (like in RETURN or ORDER BY), you MUST include it in the WITH.
+- MANDATORY ORDERING RULE (to avoid 'rte' errors):
+    a) FORBIDDEN: NEVER use an alias (like 'cnt' or 'movie_count') in the "ORDER BY" clause.
+    b) For simple aggregations: ALWAYS use "ORDER BY count(m) DESC".
+    c) For queries with WITH or complex expressions: ALWAYS use the positional index, e.g., "ORDER BY 2 DESC" to sort by the second column in the RETURN clause.
+- Syntax Rule: Ensure the query ends exactly with "$$) AS (<aliases> agtype);" including the closing parenthesis and semicolon.
+- No Subqueries: NEVER use SQL-style subqueries like "(SELECT max(...) FROM ...)". Use MATCH, WITH, and ORDER BY/LIMIT instead.
 - Keep LIMIT at 20 unless the user explicitly asks for more or fewer results.
 """
 

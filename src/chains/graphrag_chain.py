@@ -45,6 +45,7 @@ def get_graphrag_chain():
             "query": x["query"],
             "cypher_query": x["graph_data"]["cypher_query"],
             "candidate_ids": x["graph_data"]["candidate_ids"],
+            "graph_context": x["graph_data"]["graph_context"],
         }
     )
 
@@ -64,6 +65,7 @@ def get_graphrag_chain():
             "answer": answer,
             "cypher_query": state.get("cypher_query"),
             "candidate_ids": state.get("candidate_ids"),
+            "graph_context": state.get("graph_context"),
             "source_documents": state.get("docs", []),
         }
 
@@ -80,9 +82,9 @@ if __name__ == "__main__":
 
     print("----- GRAPH RAG TEST -----")
     res = chain.invoke(
-        {"query": "Indique um filme de Ficção científica do Christopher Nolan"}
+        {"query": "Recommend a Science Fiction movie by Christopher Nolan"}
     )
     print("\n[CYPHER]")
     print(res["cypher_query"])
-    print("\n[RESPOSTA]")
+    print("\n[ANSWER]")
     print(res["answer"])

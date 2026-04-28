@@ -33,7 +33,7 @@ class RecommendResponse(BaseModel):
 @router.post(
     "/v1/recommend",
     response_model=RecommendResponse,
-    summary="Query the GraphRAG Knowledge Base",
+    summary="Query your Personal Movie Archive",
 )
 async def recommend_endpoint(request: RecommendRequest):
     """

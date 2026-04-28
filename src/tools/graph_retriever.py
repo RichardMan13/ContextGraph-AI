@@ -6,7 +6,7 @@ Executes generated Cypher queries on the Apache AGE graph and returns candidate 
 
 import os
 import logging
-from typing import List, Optional
+from typing import Dict, Any
 
 import psycopg2
 from dotenv import load_dotenv
@@ -35,42 +35,65 @@ class GraphRetriever:
         conn.commit()
         return conn
 
-    def retrieve_candidate_ids(self, cypher_query: str) -> Optional[List[str]]:
+    def retrieve_candidate_ids(self, cypher_query: str) -> Dict[str, Any]:
         """
-        Executes the cypher query and returns matching movie IDs (const).
-        If the query contains the semantic sentinel, returns `None` to bypass filter.
+        Executes the cypher query.
+        Returns a dict:
+            - "ids": List of matching movie IDs (const)
+            - "graph_context": A formatted string of ALL returned data for the LLM.
         """
         cleaned_query = cypher_query.strip()
 
         if not cleaned_query or "__NO_GRAPH_FILTER__" in cleaned_query:
-            logger.info(
-                "GraphRetriever: Semantic query only (__NO_GRAPH_FILTER__). Bypassing edge filter."
-            )
-            return None
+            return {"ids": None, "graph_context": ""}
 
         conn = self._get_connection()
         candidate_ids = []
+        rows_data = []
         try:
             with conn.cursor() as cur:
                 logger.info("Executing Cypher inside Graph stage...")
                 cur.execute(cleaned_query)
+
+                # Get column names if possible (psycopg2 description)
+                col_names = (
+                    [desc[0] for desc in cur.description] if cur.description else []
+                )
+
                 rows = cur.fetchall()
 
-                # Cypher results map back to psycopg2 strings wrapped in double quotes
-                # because they are `agtype` objects under the hood. e.g.: '"tt0268978"'
                 for row in rows:
-                    if len(row) > 0 and row[0]:
-                        const_id = str(row[0]).strip('"')
-                        candidate_ids.append(const_id)
+                    row_parts = []
+                    for idx, val in enumerate(row):
+                        # Clean agtype wrappers
+                        clean_val = str(val).strip('"')
+
+                        # Heuristic: If it looks like an IMDb ID, add to candidates
+                        if clean_val.startswith("tt") and len(clean_val) > 7:
+                            candidate_ids.append(clean_val)
+
+                        col_label = (
+                            col_names[idx] if idx < len(col_names) else f"col_{idx}"
+                        )
+                        row_parts.append(f"{col_label}: {clean_val}")
+
+                    rows_data.append(" | ".join(row_parts))
+
+            context_str = "\n".join([f"- {r}" for r in rows_data])
 
             logger.info(
-                "GraphRetriever: Found %d candidate IDs in the structural graph.",
+                "GraphRetriever: Found %d candidate IDs and %d data rows.",
                 len(candidate_ids),
+                len(rows_data),
             )
-            return list(set(candidate_ids))  # deduplicate IDs safely
+
+            return {
+                "ids": list(set(candidate_ids)) if candidate_ids else [],
+                "graph_context": context_str,
+            }
 
         except psycopg2.Error as e:
             logger.error("Graph query syntax evaluation failed. Error: %s", e)
-            return []  # Return empty list properly denoting "0 matches" rather than complete fallback
+            return {"ids": [], "graph_context": "Error executing graph query."}
         finally:
             conn.close()

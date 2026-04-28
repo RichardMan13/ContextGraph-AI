@@ -30,22 +30,34 @@ def _search_vector(state: Dict[str, Any]) -> Dict[str, Any]:
 
     retriever = VectorRetriever()
 
-    # We retrieve the top 5 semantically matching plots within the graph intersection
-    docs = retriever.search(query=query, candidate_ids=candidate_ids, top_k=5)
+    # We retrieve the top 10 semantically matching plots within the graph intersection
+    docs = retriever.search(query=query, candidate_ids=candidate_ids, top_k=10)
 
     # Format documents for the prompt
-    context_str = "\n\n".join(
+    vector_context = "\n\n".join(
         [
-            f"- Filme ID: {d.metadata.get('const')} | Relevância Semântica: {d.metadata.get('semantic_distance'):.3f}\n"
-            f"  Sinopse: {d.page_content}"
+            f"- Movie: {d.metadata.get('title', 'Unknown')} | Semantic Relevance: {d.metadata.get('semantic_distance'):.3f}\n"
+            f"  Plot: {d.page_content}"
             for d in docs
         ]
     )
 
-    if not context_str:
-        context_str = "Nenhum filme recuperado nos critérios."
+    graph_context = state.get("graph_context", "")
 
-    state["context"] = context_str
+    # Combine both structured graph data and semantic vector data
+    full_context = ""
+    if graph_context:
+        full_context += (
+            f"## STRUCTURED KNOWLEDGE FROM WATCHLIST (Graph):\n{graph_context}\n\n"
+        )
+
+    if vector_context:
+        full_context += f"## SEMANTICALLY SIMILAR PLOTS (Vector):\n{vector_context}"
+
+    if not full_context:
+        full_context = "No movies or patterns found in your history matching these specific criteria."
+
+    state["context"] = full_context
     state["docs"] = docs
 
     return state

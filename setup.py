@@ -4,7 +4,7 @@ setup(
     name="src",
     packages=find_packages(),
     version="0.1.0",
-    description="POC de GraphRAG para descoberta de filmes usando LangChain e Apache AGE",
-    author="Seu Nome",
+    description="GraphRAG POC for movie discovery using LangChain and Apache AGE",
+    author="Richard Man",
     license="MIT",
 )

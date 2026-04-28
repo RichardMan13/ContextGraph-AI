@@ -13,8 +13,8 @@ from src.api.routes import router as api_router
 from src.ui.blocks import create_ui
 
 app = FastAPI(
-    title="CineGraph-AI API",
-    description="Knowledge Graph RAG for Movie Recommendations using Apache AGE and pgvector",
+    title="CineGraph-AI: Personal Movie Archive API",
+    description="Knowledge Graph RAG for navigating your personal movie history using Apache AGE and pgvector",
     version="1.0.0",
 )
 
@@ -31,10 +31,10 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api", tags=["Core System"])
 
 # 2. Mount Gradio interface directly onto the root path (/)
-demo = create_ui()
+demo, theme, css = create_ui()
 # Enable Queuing as explicitly requested before launching/mounting
 demo.queue()
-app = gr.mount_gradio_app(app, demo, path="/")
+app = gr.mount_gradio_app(app, demo, path="/", theme=theme, css=css)
 
 if __name__ == "__main__":
     import uvicorn
